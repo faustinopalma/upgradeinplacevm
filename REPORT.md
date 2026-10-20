@@ -132,8 +132,6 @@ The complete Windows/PowerShell 7 automation is [Invoke-Lab.ps1](scripts/Invoke-
 
 **This creates billable resources and deletes the groups it creates, including after errors.** It is a disposable lab, not a production change script. Existing workloads require backup/restore verification, a maintenance window, and their own application/data consistency checks.
 
-No blocking public-exposure policy was observed with the monitor-restricted NSG, so **no exemption was created**. The optional exemption template exists but was not exercised.
-
 ## What the result means operationally
 
 The test supports using a compatible resize to preserve an installed application and its persistent OS-disk data. It does not establish behavior for a transactional workload: a database could need crash recovery, a service might start more slowly, and in-memory state would be lost on reboot.
@@ -144,7 +142,7 @@ Avoiding user-visible downtime requires additional instances and controlled traf
 
 ## Evidence and cleanup
 
-[Published measurements](results/resize-20261020-101252/) include all HTTP probes, before/after results, guest diagnostics, disk metadata, and a [computed summary](results/resize-20261020-101252/summary.json). Identifiers/IPs are pseudonymized; timing, outcomes, hashes, and equality checks are preserved. Raw account/governance responses and credentials are excluded. The original result's `hyperVGeneration` field contains an image SKU; separate disk metadata confirms actual `V1`.
+[Published measurements](results/resize-20261020-101252/) include all HTTP probes, before/after results, guest diagnostics, disk metadata, and a [computed summary](results/resize-20261020-101252/summary.json). Identifiers/IPs are pseudonymized; timing, outcomes, hashes, and equality checks are preserved. Raw account responses and credentials are excluded. The original result's `hyperVGeneration` field contains an image SKU; separate disk metadata confirms actual `V1`.
 
 Recompute downtime and percentiles without Azure access:
 

@@ -13,7 +13,7 @@ Two Linux VMs were created in **South Africa North** on **October 20, 2026**, af
 
 Both operations preserved the VM resource, OS disk, NIC, static public IP, application identity, and persistent payload. Both restarted the guest. **In-place does not mean zero downtime.**
 
-All six resource groups created across the preliminary and measured runs were deleted and verified absent. No policy exemption was needed in the successful deployments.
+All six resource groups created across the preliminary and measured runs were deleted and verified absent.
 
 **Read the [experiment report](REPORT.md)** for feasibility, application/storage continuity, observed downtime, and the procedure.
 
@@ -24,7 +24,6 @@ All six resource groups created across the preliminary and measured runs were de
 | [REPORT.md](REPORT.md) | Detailed experiment and operational guidance |
 | [infra/main.bicep](infra/main.bicep) | VM, disk, network, static public IP, and monitor-restricted NSG |
 | [infra/cloud-init.yaml](infra/cloud-init.yaml) | nginx application, persistent payload, and per-boot health metadata |
-| [infra/exemption.bicep](infra/exemption.bicep) | Conditional, expiring, lab-scoped policy waiver |
 | [scripts/Invoke-Lab.ps1](scripts/Invoke-Lab.ps1) | Deployment, regional retries, monitoring, resize, verification, and cleanup |
 | [scripts/Monitor-Http.ps1](scripts/Monitor-Http.ps1) | One HTTP probe per second, with JSONL evidence |
 | [scripts/Analyze-Results.ps1](scripts/Analyze-Results.ps1) | Downtime windows, latency percentiles, and cleanup accounting |
@@ -40,14 +39,12 @@ All six resource groups created across the preliminary and measured runs were de
 - An authenticated Azure CLI cache outside the repository.
 - An explicitly selected subscription with resource creation/deletion permissions, sufficient quota, and allocatable source/target sizes.
 - A stable public IPv4 address for the external monitor.
-- Policy exemption permissions only if a blocking public-exposure policy actually requires a waiver.
 
 ## Validate without deploying
 
 ```powershell
 $env:AZURE_CONFIG_DIR = 'C:\.AutenticazioneCLI\<environment>\.azure'
 az bicep build --file .\infra\main.bicep --stdout | Out-Null
-az bicep build --file .\infra\exemption.bicep --stdout | Out-Null
 .\tests\Test-Monitor.ps1
 .\tests\Test-Analysis.ps1
 ```
@@ -93,7 +90,7 @@ After completion:
 
 ## Evidence and publication
 
-Raw command outputs, account details, tenant governance configuration, authentication cache paths, deployment parameters, and Activity Logs are **not committed**. The local `evidence/` and `.azure/` directories are ignored.
+Raw evidence and local authentication state are **not committed**. The local `evidence/` and `.azure/` directories are ignored.
 
 The checked-in [results](results/resize-20261020-101252/) contain sanitized measurements with timestamps, durations, probe outcomes, hashes, and identity equality preserved. Environment identifiers are replaced with deterministic labels and public addresses with documentation-only IPv4 addresses. See the [publication manifest](results/resize-20261020-101252/publication-manifest.json).
 
@@ -112,5 +109,5 @@ The exporter is deliberately limited to the expected two-experiment lab schema. 
 - The application is a low-load nginx health endpoint, not a transactional workload or performance benchmark.
 - The monitor uses a 1 s interval and 800 ms timeout; downtime is sampled client-observed unavailability.
 - Each source size was resized once. Results are observations, not Azure guarantees.
-- The direct resize path was exercised; explicit deallocation and real policy exemption paths were not.
+- The direct resize path was exercised; explicit deallocation was not tested.
 - Plain HTTP is restricted to the monitor's IPv4/32 and used only for a temporary, non-sensitive lab.
