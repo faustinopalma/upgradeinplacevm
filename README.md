@@ -1,258 +1,135 @@
-# Azure VM in-place resize laboratory
+# Upgrading legacy Azure VMs in place
 
-Can a legacy Azure VM move to a modern size without rebuilding its application or moving persistent data? This laboratory tests **feasibility, application continuity, and client-observed downtime**, then adds capacity reservation to mitigate allocation failure after deallocation.
+## The problem
 
-The experiments use **Bicep**, **Azure CLI**, Ubuntu 22.04, and a **PowerShell HTTP observer**. Here, *in-place* means retaining the existing VM resource and disks, not upgrading the OS or keeping the guest continuously available.
+Modernizing a legacy VM raises two questions: **can we change its hardware size without rebuilding the application or moving its data, and how much downtime should we expect?**
 
-- [Results](#results)
-- [Test design and measurement](#test-design-and-measurement)
-- [Capacity-reserved resize methodology](#capacity-reserved-resize-methodology)
-- [Run the laboratory](#run-the-laboratory)
-- [Evidence and cleanup](#evidence-and-cleanup)
-- [Repository layout](#repository-layout)
-- [Limitations and production use](#limitations-and-production-use)
+This repository documents a practical alternative to deploying a replacement VM: resize the existing Azure VM while retaining its resource identity and persistent disks. The upgrade concerns the **VM size**, not the operating system, Hyper-V generation, or disk controller.
 
-## Results
+There is also an allocation risk. If resizing requires deallocation, Azure releases the current compute allocation. The target size might then be unavailable, and returning to the old size is not guaranteed. The second part of the experiment addresses this with **On-demand Capacity Reservation before shutdown**.
 
-All tests below ran on **October 20, 2026**.
+## The experiment
 
-| Region | Procedure | Source -> target | Control-plane duration | Observed HTTP downtime |
-|---|---|---|---:|---:|
-| South Africa North | Direct resize | `D1` -> `D2ds_v5` | 40.90 s | **47.99 s** |
-| South Africa North | Direct resize | `D2_v2` -> `D2ds_v5` | 38.15 s | **30.99 s** |
-| South Africa North | Capacity-reserved resize, VM 1 | `D2_v2` -> `D2ds_v5` | 102.23 s | **102.01 s** |
-| South Africa North | Capacity-reserved resize, VM 2 | `D2_v2` -> `D2ds_v5` | 117.55 s | **116.99 s** |
-| West Europe | Reserve two slots, then create two target VMs | New `D2ds_v5` VMs | Not a resize | Not applicable |
+On **October 20, 2026**, we tested `Standard_D1` and `Standard_D2_v2` moving to `Standard_D2ds_v5`. The target preserves the sources' Gen1/SCSI compatibility and includes temporary storage; it is a compatible test destination, not a universal sizing recommendation.
 
-The four resizes preserved the VM resource, managed OS disk, NIC, static public IP, application identity, and persistent payload. Each guest rebooted; the boot counter increased from 1 to 2. **In-place does not mean zero downtime.**
+Each VM ran Ubuntu 22.04 and nginx. Its `/health` endpoint exposed application identity, a persistent payload hash, and boot metadata. Application data lived on the managed OS disk.
 
-Direct resize used `az vm resize` without explicit deallocation. The reserved path deliberately used **deallocate -> resize -> associate -> start**, with both target slots secured before the first shutdown. Its duration includes that sequence and is not a like-for-like benchmark of reservation overhead.
+An independent PowerShell process on the Windows execution host probed HTTP **every second**, with an **800 ms timeout**. The observer was outside the tested VMs; its hosting infrastructure and location were not recorded. Access was restricted to its public IPv4 address on TCP 8080.
 
-West Europe rejected legacy creation with `SkuNotAvailable`, so the complete resize tests used South Africa North. The subsequent **West Europe partial test succeeded**: two target slots were reserved first, then two VMs were created against them and verified in the reservation's runtime allocation. This validates target allocation, **not a legacy resize in West Europe**.
+For each resize, we:
 
-The reservations were held for approximately **7 min 12 s** and **6 min 14 s**, respectively, from successful capacity verification to quantity-zero verification. Both were then deleted. Release caused no observed HTTP failures or guest reboots.
+1. Recorded healthy baseline responses and VM, disk, network, and application identities.
+2. Changed the VM size while monitoring continuously.
+3. Verified application recovery, unchanged persistent identities and data, and the expected guest reboot.
+4. Deleted the temporary resources and verified their absence.
 
-## Test design and measurement
+### Results
 
-### Workload and compatibility
+| Region | Test | Control-plane duration | Observed HTTP downtime |
+|---|---|---:|---:|
+| South Africa North | Direct `D1` -> `D2ds_v5` | 40.90 s | **47.99 s** |
+| South Africa North | Direct `D2_v2` -> `D2ds_v5` | 38.15 s | **30.99 s** |
+| South Africa North | Reserved `D2_v2` -> `D2ds_v5`, VM 1 | 102.23 s | **102.01 s** |
+| South Africa North | Reserved `D2_v2` -> `D2ds_v5`, VM 2 | 117.55 s | **116.99 s** |
+| West Europe | Reserve two `D2ds_v5` slots, then create two VMs | Successful allocation | Not a resize |
 
-| Size | vCPUs | Memory |
-|---|---:|---:|
-| `Standard_D1` | 1 | 3.5 GiB |
-| `Standard_D2_v2` | 2 | 7 GiB |
-| `Standard_D2ds_v5` | 2 | 8 GiB |
+**All four resizes preserved the VM resource, OS disk, NIC, static public IP, application identity, and payload. All four restarted the guest.** No application reinstallation was required.
 
-`D2ds_v5` is a destination in [Microsoft's modernization guide](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/lifecycle/retirement/retired-sizes-modernization-guide). It supports the sources' Gen1/SCSI configuration and includes local temporary storage. This isolates resizing from generation or controller conversion; it is not a universal right-sizing recommendation.
+The direct tests used `az vm resize` without explicit deallocation. The reserved tests used **deallocate -> resize -> associate -> start**. Their timings cover different procedures and do not isolate reservation overhead.
 
-Each VM ran nginx with an HTTP `/health` endpoint. Application identity and a small payload lived on the **30 GiB Standard LRS managed OS disk**, not temporary storage. A systemd service regenerated boot metadata on startup.
+West Europe rejected creation of the legacy source VMs with `SkuNotAvailable`, so the full tests ran in South Africa North. The later West Europe test successfully reserved target capacity and created two VMs that consumed it. **It did not validate a legacy resize in West Europe.**
 
-| Continuity check | Expected after resize |
-|---|---|
-| VM resource ID and `vmId`, OS disk ID, NIC ID, static public IP | Unchanged |
-| Application identity, guest `machine-id`, payload SHA-256 | Unchanged |
-| Guest `boot_id` and boot counter | New boot ID; increased counter |
-| Application | Healthy without reinstallation |
+Downtime is measured from the first failed probe's start to the first recovered probe's start. These are sampled application observations, not guaranteed outage durations. Command completion is not application readiness: in the direct D1 test, HTTP recovered almost 16 seconds later.
 
-### Observer
+## The precaution: reserve before stopping
 
-```text
-Windows execution host: separate PowerShell observer process
-    | HTTP /health every second
-    v
-Static public IP -> NSG permitting only observer IPv4/32:8080
-    |
-Ubuntu VM -> nginx -> persistent identity and payload on managed OS disk
-```
+Quota and SKU availability listings do not reserve hardware. A **Reserved Instance** provides a billing discount; an **On-demand Capacity Reservation** secures matching compute capacity under an SLA. Neither protects against guest or application startup failures.
 
-The observer ran outside the tested VMs, on the Windows host executing the lab. Its hardware, hosting infrastructure, and geographic location were not recorded. Guest restarts therefore did not stop the observer, but latency includes its network path to Azure.
+The tested procedure for regional, standalone VMs is:
 
-Each probe used an **800 ms timeout**, no retries, and recorded UTC timestamps, latency, status/error, and health payload in JSONL. **Observed downtime** runs from the start of the first failed probe to the start of the first subsequent successful probe. It is a sampled client observation, not an exact hypervisor stop/start interval.
+1. **Check compatibility and recovery:** target size, region/zone, quota, supported placement, and a tested backup/restore plan for production.
+2. **Reserve the full target batch while sources remain running.** Require successful provisioning, matching size and placement, and enough free slots in both configured and runtime capacity.
+3. **Recheck before each shutdown.** If the reservation or application baseline is not valid, do not stop the source.
+4. **Deallocate, resize, associate, then start.** Verify the target size and explicit reservation-group association before starting; never substitute an unreserved start.
+5. **Verify actual use and application recovery.** Confirm the VM appears in `virtualMachinesAllocated` and retains its persistent identities and payload.
+6. **Release after acceptance:** set reserved quantity to zero, remove VM associations, and delete the reservation and its group. This does not require another deallocation.
 
-<details>
-<summary>Direct-resize probe details and latency</summary>
+In our tests, both slots were reserved before the first resize. Reservations were held for approximately **7 min 12 s** in South Africa North and **6 min 14 s** in West Europe, measured between capacity verification and quantity-zero verification. Release caused **no observed HTTP failures or guest reboots**.
 
-| Measurement | D1 -> D2ds_v5 | D2_v2 -> D2ds_v5 |
-|---|---:|---:|
-| Last-good to first-good probe interval | 49.00 s | 32.00 s |
-| Failed / total probes | 48 / 189 | 31 / 172 |
-| Monitoring duration | 188.11 s | 171.09 s |
-| Successful baseline probes | 65 | 65 |
-| Successful probes after command completion | 68 | 69 |
-| Maximum actual probe spacing | 1.040 s | 1.024 s |
+On-demand reservations have **no minimum term commitment** and can be deleted after the test. Unused slots are billable, so running sources and unused target capacity incur costs simultaneously. A VM consuming its slot does not incur a second compute charge for that slot; disks and networking are separate. These scripts do not request scheduled Future or Block reservations.
 
-All 79 failed probes timed out without an HTTP response code.
+**Production caveat:** retain useful reserved capacity and investigate if recovery fails. The disposable lab instead cleans up everything it created, even on failure. Availability Sets and other unsupported placements require a different approach; the script does not implement zonal migrations.
 
-| UTC event | D1 -> D2ds_v5 | D2_v2 -> D2ds_v5 |
-|---|---|---|
-| Resize launched | 10:16:59.283 | 10:23:48.624 |
-| Last successful probe before interruption | 10:17:07.087 | 10:23:54.209 |
-| First failed probe | 10:17:08.099 | 10:23:55.214 |
-| Resize procedure returned | 10:17:40.229 | 10:24:26.813 |
-| Last failed probe | 10:17:55.086 | 10:24:25.210 |
-| First recovered probe | 10:17:56.085 | 10:24:26.208 |
+## Reproduce the tests
 
-For D1, recovery was observed **15.86 s after** command completion; for D2_v2, the recovered probe started **0.61 s before** it returned. Control-plane success is not application readiness.
+Requires **Windows, PowerShell 7, Azure CLI, Bicep CLI, OpenSSH `ssh-keygen`**, an authenticated subscription with sufficient permissions/quota, and a stable public IPv4 address for the observer.
 
-| Successful-request latency | D1 baseline / after | D2_v2 baseline / after |
-|---|---:|---:|
-| p50 | 176.91 / 181.18 ms | 174.79 / 175.40 ms |
-| p95 | 225.27 / 200.23 ms | 196.88 / 185.15 ms |
-| p99 | 441.66 / 369.42 ms | 450.23 / 197.34 ms |
-
-Post-resize percentiles use successful requests after command completion. One request per second is not a throughput benchmark.
-
-</details>
-
-## Capacity-reserved resize methodology
-
-Deallocation releases the current compute allocation. Neither the target size nor a return to the legacy size is then assured. **Quota and SKU listings do not reserve hardware**, nor does a Reserved Instance, which provides a billing discount. An **On-demand Capacity Reservation** protects compute capacity under an SLA, not guest or application recovery.
-
-1. **Preflight:** verify backups and restore, OS/disk compatibility, target size, region/zone, and quota for running sources plus reserved targets. Check placement support; Availability Sets, for example, are unsupported.
-2. **Capture the baseline:** keep sources running and record the Azure and application identities listed above.
-3. **Reserve the whole batch:** require `Succeeded`, matching size/placement, and enough free slots in both configured and runtime capacity. Start external monitoring and require a healthy baseline.
-4. **Gate and resize each VM:** recheck remaining slots, then deallocate, resize while deallocated, explicitly associate with the reservation group, verify that association, and start. A failed gate means **no source shutdown**; never fall back to an unreserved start.
-5. **Accept recovery:** confirm `virtualMachinesAllocated` contains the VM, verify application health and persistent identities/hash, and confirm the expected reboot.
-6. **Release after acceptance:** with monitoring active, set reserved quantity to zero, remove VM associations, and delete the reservation and its group. Verify application continuity and unchanged boot IDs; no second deallocation is needed.
-
-For production, a failed resize or application check calls for retaining useful reserved capacity and investigating. The disposable lab instead deletes all resources it created, even after an error.
-
-### Duration and cost
-
-On-demand reservations have **no minimum term commitment** and can be deleted after the test. The script does not request scheduled Future or Block reservations.
-
-Unused reserved slots are billable. While sources run and target slots are unused, both incur charges; a VM consuming its reserved slot does not incur a second compute charge for that slot. Disks and networking are billed separately. Measured holding time is not a final invoice or billing-granularity guarantee.
-
-## Run the laboratory
-
-### Prerequisites and local validation
-
-- **Windows and PowerShell 7**; cross-platform execution is not claimed.
-- Azure CLI, Bicep CLI (`az bicep install` if missing), and OpenSSH `ssh-keygen`.
-- An authenticated Azure CLI cache outside the repository.
-- An explicitly selected subscription with creation/deletion permissions, sufficient quota, and allocatable sizes; reservation permissions for reserved tests.
-- A stable public IPv4 address for the observer.
+**These commands create billable resources, interrupt test applications, and delete their resource groups afterward. They are not production migration scripts.**
 
 ```powershell
 $configDir = 'C:\.AutenticazioneCLI\<environment>\.azure'
 $env:AZURE_CONFIG_DIR = $configDir
 az account show
 
+# Direct resize: one D1 and one D2_v2.
+.\scripts\Invoke-Lab.ps1 `
+  -ConfigDir $configDir -SubscriptionId '<subscription-id>' `
+  -Regions @('westeurope', 'southafricanorth')
+
+# Reserve two target slots, then resize two D2_v2 VMs sequentially.
+.\scripts\Invoke-ReservedResizeLab.ps1 `
+  -ConfigDir $configDir -SubscriptionId '<subscription-id>' `
+  -Quantity 2 -SourceSize Standard_D2_v2 `
+  -Regions @('westeurope', 'southafricanorth')
+
+# Partial test: reserve first, then create target VMs in West Europe.
+.\scripts\Invoke-ReservedResizeLab.ps1 `
+  -ConfigDir $configDir -SubscriptionId '<subscription-id>' `
+  -Quantity 2 -Regions @('westeurope') -TargetAllocationOnly
+```
+
+Both scripts check the active subscription. The reserved script fixes the target to `Standard_D2ds_v5` and supports `Standard_D1`, `Standard_D2_v2`, or `Standard_D2s_v3` sources. Its regional fallback is allowed only for capacity failures **before any resize starts**, after failed-attempt cleanup. Supply only `westeurope` to forbid fallback.
+
+### Local validation and analysis
+
+```powershell
 az bicep build --file .\infra\main.bicep --stdout | Out-Null
 .\tests\Test-Monitor.ps1
 .\tests\Test-Analysis.ps1
 .\tests\Test-CapacityReservation.ps1
 .\tests\Test-LabCommon.ps1
-```
 
-Mocked reservation tests cover failed gates, slot accounting, operation ordering, runtime allocation, error propagation, and non-disruptive release. They do not establish regional capacity.
-
-**The following commands create billable resources, interrupt the lab applications, and delete all resource groups they create, including after errors. These are disposable experiments, not production change scripts.**
-
-### Direct resize
-
-[Invoke-Lab.ps1](scripts/Invoke-Lab.ps1) tests one `D1` and one `D2_v2` against `D2ds_v5`. It captures the baseline, checks `az vm list-vm-resize-options`, monitors through resize and recovery, and verifies continuity before cleanup. If the target is absent from resize options, it uses deallocate/resize/start; that branch was not needed in the direct-resize measurements above.
-
-```powershell
-.\scripts\Invoke-Lab.ps1 `
-  -ConfigDir $configDir `
-  -SubscriptionId '<subscription-id>' `
-  -Regions @('westeurope', 'southafricanorth') `
-  -BaselineSeconds 60 `
-  -RecoverySeconds 60
-```
-
-### Capacity-reserved resize
-
-[Invoke-ReservedResizeLab.ps1](scripts/Invoke-ReservedResizeLab.ps1) creates regional, standalone VMs. The target is fixed to `D2ds_v5`; source choices are `D1`, `D2_v2`, and `D2s_v3` with their `Standard_` prefix. Other sizes or zonal migrations require a separate compatibility review and implementation.
-
-```powershell
-.\scripts\Invoke-ReservedResizeLab.ps1 `
-  -ConfigDir $configDir `
-  -SubscriptionId '<subscription-id>' `
-  -Quantity 2 `
-  -Regions @('westeurope', 'southafricanorth') `
-  -SourceSize Standard_D2_v2 `
-  -BaselineSeconds 60 `
-  -RecoverySeconds 60
-```
-
-`Quantity 2` means two running source VMs and two simultaneously reserved target slots, resized sequentially. Capacity failures can trigger the next supplied region **only before any resize starts**, after failed-region cleanup. Other errors stop the run. Use `-Regions @('westeurope')` to forbid fallback.
-
-### West Europe target-only allocation
-
-When legacy creation is unavailable, reserve target capacity first, then create new VMs explicitly against it:
-
-```powershell
-.\scripts\Invoke-ReservedResizeLab.ps1 `
-  -ConfigDir $configDir `
-  -SubscriptionId '<subscription-id>' `
-  -Quantity 2 `
-  -Regions @('westeurope') `
-  -TargetAllocationOnly
-```
-
-This mode verifies reserved allocation, HTTP health, and reservation release, without a legacy source or resize downtime measurement.
-
-### Analysis and optional metrics
-
-Recompute the published direct-resize measurements without Azure access:
-
-```powershell
+# Recompute published direct-resize measurements without Azure access.
 .\scripts\Analyze-Results.ps1 -EvidencePath '.\results\resize-20261020-101252'
 ```
 
-For new runs, use `evidence/resize-<UTC-timestamp>/` or `evidence/reserved-resize-<timestamp>-<suffix>/`. Pass `-ExpectedExperiments <quantity>` if the reserved batch differs from the default of two. Target-only runs write allocation records under `evidence/reserved-allocation-<timestamp>-<suffix>/`, not resize records for this analyzer.
+For a new resize run, point the analyzer to its directory under `evidence/`; use `-ExpectedExperiments <quantity>` for batches other than two. Target-only allocation records are not resize inputs. Mocked tests validate safety gates and command ordering, not regional capacity.
 
-Optional platform CPU and I/O metrics can be collected during a direct-resize run in another PowerShell session:
+## Evidence and implementation
 
-```powershell
-.\scripts\Collect-LabMetrics.ps1 `
-  -ConfigDir $configDir `
-  -EvidencePath '.\evidence\resize-<UTC-timestamp>'
-```
-
-## Evidence and cleanup
-
-- [Direct-resize evidence](results/resize-20261020-101252/): probes, before/after identities, guest diagnostics, disk metadata, and [computed summary](results/resize-20261020-101252/summary.json). UUIDs and IPs are pseudonymized while timestamps, hashes, outcomes, and identity equality are preserved; see the [publication manifest](results/resize-20261020-101252/publication-manifest.json). The original `hyperVGeneration` result field contains an image SKU; separate disk metadata confirms actual `V1`.
-- [Reservation test summary](results/capacity-reservation-20261020/summary.json): curated counts, timings, allocation verification, and release outcomes, without environment identifiers.
-- **Cleanup:** six resource groups from the original runs were verified absent at [10:33:50 UTC](results/resize-20261020-101252/cleanup-final-verification.json). All three groups from the reserved-resize and West Europe target-only tests were independently verified absent, with no tagged resources remaining, by **15:23 UTC**. Temporary SSH keys and observers were removed.
-
-Raw evidence and local authentication state remain in ignored `evidence/` and `.azure/` directories. To export a new **original-schema direct-resize run**, use an unused output directory and review it before committing:
-
-```powershell
-.\scripts\Export-PublicationEvidence.ps1 `
-  -EvidencePath '.\evidence\resize-<UTC-timestamp>' `
-  -OutputPath '.\results\resize-<UTC-timestamp>'
-```
-
-This exporter does not support the reserved-resize or target-only schemas and is not a general-purpose sanitization guarantee; curate those results separately.
-
-## Repository layout
-
-| Path | Purpose |
+| Resource | Contents |
 |---|---|
-| [infra/main.bicep](infra/main.bicep), [cloud-init.yaml](infra/cloud-init.yaml) | VM, disk, restricted network, and persistent nginx application |
-| [Invoke-Lab.ps1](scripts/Invoke-Lab.ps1) | Original direct-resize experiments |
-| [Invoke-ReservedResizeLab.ps1](scripts/Invoke-ReservedResizeLab.ps1) | Reserved resize and target-only allocation |
-| [CapacityReservation.ps1](scripts/CapacityReservation.ps1), [Lab-Common.ps1](scripts/Lab-Common.ps1) | Capacity gates, association/release, shared CLI and health helpers |
-| [Monitor-Http.ps1](scripts/Monitor-Http.ps1) | Independent HTTP observer |
-| [Analyze-Results.ps1](scripts/Analyze-Results.ps1), [Collect-LabMetrics.ps1](scripts/Collect-LabMetrics.ps1) | Downtime analysis and optional platform metrics |
-| [Export-PublicationEvidence.ps1](scripts/Export-PublicationEvidence.ps1) | Curated export for the original run schema |
-| [results](results/), [tests](tests/) | Published evidence and local validation |
+| [Direct-resize evidence](results/resize-20261020-101252/) | Sanitized probes, identities, guest/disk diagnostics, timings, and latency statistics |
+| [Capacity-reservation results](results/capacity-reservation-20261020/summary.json) | Curated full-resize and West Europe allocation measurements |
+| [VM template](infra/main.bicep) and [cloud-init](infra/cloud-init.yaml) | Infrastructure and persistent nginx test application |
+| [Direct lab](scripts/Invoke-Lab.ps1) and [reserved lab](scripts/Invoke-ReservedResizeLab.ps1) | Deployment, measurement, verification, and cleanup |
+| [Observer](scripts/Monitor-Http.ps1) and [analyzer](scripts/Analyze-Results.ps1) | HTTP sampling and downtime calculation |
+| [Reservation helpers](scripts/CapacityReservation.ps1) and [shared helpers](scripts/Lab-Common.ps1) | Capacity gates, association/release, CLI execution, and health checks |
+| [Optional metrics](scripts/Collect-LabMetrics.ps1), [exporter](scripts/Export-PublicationEvidence.ps1), [tests](tests/) | Platform metrics, curated publication, and local validation |
 
-## Limitations and production use
+All **nine resource groups** across the original and reservation experiments were deleted and independently verified absent. Temporary keys and observers were removed.
 
-- These are single-run, low-load nginx observations, not Azure downtime or future capacity guarantees.
-- Persistent **OS-disk** continuity was tested, not temporary storage, separate data disks, database consistency, or in-memory state.
-- Plain HTTP was restricted to the observer's IPv4/32 for a temporary, non-sensitive lab; no SSH/RDP ingress was opened.
-- Production requires application-consistent backup/restore validation, compatible placement and storage, and a maintenance window. Returning to a legacy size is not a guaranteed rollback. Update the retained VM's desired size in IaC after acceptance.
-- If prolonged interruption is unacceptable, prepare an already-running replacement with a data-consistent traffic-switching plan. Reserving compute alone does not make a single-VM resize highly available.
+Raw evidence and authentication state stay in ignored `evidence/` and `.azure/` directories. The exporter supports only the original two-experiment schema; reservation results require separate curation. Published identifiers are pseudonymized. In the original result files, `hyperVGeneration` contains an image SKU; separate disk metadata confirms `V1`.
 
-## References
+## Conclusion
 
-- [Legacy VM modernization guide](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/lifecycle/retirement/retired-sizes-modernization-guide)
-- [Resize behavior and compatibility](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/resize-vm)
-- [On-demand capacity reservation: terms, billing, support, and SLA](https://learn.microsoft.com/en-us/azure/virtual-machines/capacity-reservation-overview)
-- [Associate an existing VM](https://learn.microsoft.com/en-us/azure/virtual-machines/capacity-reservation-associate-vm)
-- [Resize within a reservation group](https://learn.microsoft.com/en-us/azure/virtual-machines/capacity-reservation-modify)
+**A compatible in-place resize can preserve an installed application and its persistent OS-disk data, but it remains a disruptive operation.** Reserving target capacity before shutdown mitigates allocation risk; it does not eliminate downtime or replace recovery planning.
+
+These low-load nginx tests do not establish database consistency, temporary/data-disk persistence, or production outage bounds. If prolonged interruption is unacceptable, use an already-running replacement and a data-consistent traffic-switching plan. After an accepted production resize, update the VM's desired size in IaC.
+
+### Microsoft references
+
+- [Modernization destinations](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/lifecycle/retirement/retired-sizes-modernization-guide) and [resize compatibility](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/resize-vm)
+- [On-demand capacity reservation: support, billing, and SLA](https://learn.microsoft.com/en-us/azure/virtual-machines/capacity-reservation-overview)
+- [Associate an existing VM](https://learn.microsoft.com/en-us/azure/virtual-machines/capacity-reservation-associate-vm) and [resize within a reservation group](https://learn.microsoft.com/en-us/azure/virtual-machines/capacity-reservation-modify)
 - [Release without deallocating the VM](https://learn.microsoft.com/en-us/azure/virtual-machines/capacity-reservation-remove-vm#update-the-reserved-quantity-to-zero)
