@@ -1,0 +1,7 @@
+{
+  "diskSizeGB": 30,
+  "hyperVGeneration": "V1",
+  "id": "/subscriptions/identity-001/resourceGroups/rg-resize-20261020-101252-legacy-v2-southafricanorth/providers/Microsoft.Compute/disks/legacy-v2-os",
+  "osType": "Linux",
+  "sku": "Standard_LRS"
+}

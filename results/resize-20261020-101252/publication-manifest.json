@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "sourceRun": "resize-20261020-101252",
+  "language": "English",
+  "dataType": "Sanitized measurements from a real Azure experiment; not synthetic.",
+  "preserved": [
+    "UTC timestamps and precision",
+    "probe ordering and outcomes",
+    "durations",
+    "boot counts",
+    "payload SHA-256",
+    "identity equality"
+  ],
+  "pseudonymized": [
+    "UUIDs and guest machine IDs -> consistent identity labels",
+    "IPv4 addresses -> RFC 5737 documentation addresses"
+  ],
+  "omitted": [
+    "authentication data",
+    "raw account responses",
+    "local paths",
+    "public/private keys",
+    "deployment parameters",
+    "governance inventories",
+    "full Activity Logs",
+    "unfiltered command outputs"
+  ],
+  "events": "Curated resource-group creation, SKU failure and cleanup events; not the full operational log.",
+  "historicalFieldNote": "The original result hyperVGeneration field contains the image SKU; actual V1 generation is confirmed by the separate OS disk metadata.",
+  "verification": "Published analysis matches source sample counts, failure counts, downtime, control-plane duration and p95 latencies.",
+  "sourceFiles": [
+    {
+      "name": "legacy-v1-result.json",
+      "sourceSha256": "C16920E667DF2851334A2DD6872524F5BB2294AD946D4548A86E759B7D0BA2C5"
+    },
+    {
+      "name": "legacy-v1-probes.jsonl",
+      "sourceSha256": "D2DB3CA9FE5F92AB1A1FC8686C1B872F3432E634A3E558E373D85553D431BD44"
+    },
+    {
+      "name": "legacy-v1-guest-after.json",
+      "sourceSha256": "33927B36E9A54A5957D584B913C81BA90685F2841D82C48C410B691741C5A5E7"
+    },
+    {
+      "name": "legacy-v1-os-disk-metadata.json",
+      "sourceSha256": "93861AA426C49F38A139B94E0D1611EBC44F3E17CA2769C8F6C591370BDE0A00"
+    },
+    {
+      "name": "legacy-v1-platform-cpu.json",
+      "sourceSha256": "75FBB592ACB1770B838B59C7FF94D13F3502C3C40042A1C9FACDF56EBAADE558"
+    },
+    {
+      "name": "legacy-v1-platform-io.json",
+      "sourceSha256": "292B686650DADB022B8B2336741DE8DBD697C4DE6FD22A2DD5ECA5B968E3879D"
+    },
+    {
+      "name": "legacy-v2-result.json",
+      "sourceSha256": "E4BFB2DAAFE9EAD78CAB3BF3CF1CC3AD3006859452CC23035AAF77068B018CC0"
+    },
+    {
+      "name": "legacy-v2-probes.jsonl",
+      "sourceSha256": "7184639EB31EB4E2AA4D3842FF0F2CE019FFAF6C9829F234A4913E3BFBECF762"
+    },
+    {
+      "name": "legacy-v2-guest-after.json",
+      "sourceSha256": "BBAEC173A7D682D59B9265A57C420CCDD7DA1343055689B42D7D376F9DA5FE60"
+    },
+    {
+      "name": "legacy-v2-os-disk-metadata.json",
+      "sourceSha256": "735CC9828E7652542D14BEFD928B8FF957229CEEF857FB80208F337A7931C8C4"
+    },
+    {
+      "name": "legacy-v2-platform-cpu.json",
+      "sourceSha256": "C07EBA6E15DB9B5AB2C91BE367C77139D5356F145FD425D483BF487C1EFFFA9E"
+    },
+    {
+      "name": "legacy-v2-platform-io.json",
+      "sourceSha256": "697523A92BDFB1F09A935F39A2B53A614738FACD85F3EC536DD43C41D5F94974"
+    },
+    {
+      "name": "cleanup-final-verification.json",
+      "sourceSha256": "6CAC3A0088C07F2AADE7807080CD6B59282BEBEA24B9C5BF439A0519447F9B85"
+    },
+    {
+      "name": "retail-prices-eur.json",
+      "sourceSha256": "B1DCE6DDC0D2D24816E6E3E834F80B12686D35A25E8A5EA956DF507A61C53A31"
+    },
+    {
+      "name": "events.jsonl",
+      "sourceSha256": "810114EBCA54942480E3707DA4E2FF851EFCB3C139F202791D602DD61AD0A2B2"
+    },
+    {
+      "name": "validation.txt",
+      "sourceSha256": "F0497D8F4991EC6C807BF23AAB523B8D6F342C630F9A12490227414CFE7697DF"
+    },
+    {
+      "name": "validation-timestamp-precision.txt",
+      "sourceSha256": "45B5EEA74E66788DA55E0AC999613A6630EA7AF077BB9304FB4E6D235E7A30D8"
+    }
+  ]
+}

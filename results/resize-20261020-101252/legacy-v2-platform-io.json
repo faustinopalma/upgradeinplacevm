@@ -1,0 +1,251 @@
+{
+  "cost": 48,
+  "interval": "PT1M",
+  "namespace": "Microsoft.Compute/virtualMachines",
+  "resourceregion": "southafricanorth",
+  "timespan": "2026-10-20T10:13:00Z/2026-10-20T10:26:20Z",
+  "value": [
+    {
+      "displayDescription": "Bytes read from disk during monitoring period",
+      "errorCode": "Success",
+      "id": "/subscriptions/identity-001/resourceGroups/rg-resize-20261020-101252-legacy-v2-southafricanorth/providers/Microsoft.Compute/virtualMachines/legacy-v2/providers/Microsoft.Insights/metrics/Disk Read Bytes",
+      "name": {
+        "localizedValue": "Disk Read Bytes",
+        "value": "Disk Read Bytes"
+      },
+      "resourceGroup": "rg-resize-20261020-101252-legacy-v2-southafricanorth",
+      "timeseries": [
+        {
+          "data": [
+            {
+              "timeStamp": "2026-10-20T10:13:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:14:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:15:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:16:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:17:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:18:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:19:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:20:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:21:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:22:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:23:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:24:00Z",
+              "total": 252292107.51
+            },
+            {
+              "timeStamp": "2026-10-20T10:25:00Z"
+            }
+          ],
+          "metadatavalues": []
+        }
+      ],
+      "type": "Microsoft.Insights/metrics",
+      "unit": "Bytes"
+    },
+    {
+      "displayDescription": "Bytes written to disk during monitoring period",
+      "errorCode": "Success",
+      "id": "/subscriptions/identity-001/resourceGroups/rg-resize-20261020-101252-legacy-v2-southafricanorth/providers/Microsoft.Compute/virtualMachines/legacy-v2/providers/Microsoft.Insights/metrics/Disk Write Bytes",
+      "name": {
+        "localizedValue": "Disk Write Bytes",
+        "value": "Disk Write Bytes"
+      },
+      "resourceGroup": "rg-resize-20261020-101252-legacy-v2-southafricanorth",
+      "timeseries": [
+        {
+          "data": [
+            {
+              "timeStamp": "2026-10-20T10:13:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:14:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:15:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:16:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:17:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:18:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:19:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:20:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:21:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:22:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:23:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:24:00Z",
+              "total": 1902352479.32
+            },
+            {
+              "timeStamp": "2026-10-20T10:25:00Z"
+            }
+          ],
+          "metadatavalues": []
+        }
+      ],
+      "type": "Microsoft.Insights/metrics",
+      "unit": "Bytes"
+    },
+    {
+      "displayDescription": "The number of bytes received on all network interfaces by the Virtual Machine(s) (Incoming Traffic)",
+      "errorCode": "Success",
+      "id": "/subscriptions/identity-001/resourceGroups/rg-resize-20261020-101252-legacy-v2-southafricanorth/providers/Microsoft.Compute/virtualMachines/legacy-v2/providers/Microsoft.Insights/metrics/Network In Total",
+      "name": {
+        "localizedValue": "Network In Total",
+        "value": "Network In Total"
+      },
+      "resourceGroup": "rg-resize-20261020-101252-legacy-v2-southafricanorth",
+      "timeseries": [
+        {
+          "data": [
+            {
+              "timeStamp": "2026-10-20T10:13:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:14:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:15:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:16:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:17:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:18:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:19:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:20:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:21:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:22:00Z",
+              "total": 0.0
+            },
+            {
+              "timeStamp": "2026-10-20T10:23:00Z",
+              "total": 0.0
+            },
+            {
+              "timeStamp": "2026-10-20T10:24:00Z",
+              "total": 49982.0
+            },
+            {
+              "timeStamp": "2026-10-20T10:25:00Z",
+              "total": 0.0
+            }
+          ],
+          "metadatavalues": []
+        }
+      ],
+      "type": "Microsoft.Insights/metrics",
+      "unit": "Bytes"
+    },
+    {
+      "displayDescription": "The number of bytes out on all network interfaces by the Virtual Machine(s) (Outgoing Traffic)",
+      "errorCode": "Success",
+      "id": "/subscriptions/identity-001/resourceGroups/rg-resize-20261020-101252-legacy-v2-southafricanorth/providers/Microsoft.Compute/virtualMachines/legacy-v2/providers/Microsoft.Insights/metrics/Network Out Total",
+      "name": {
+        "localizedValue": "Network Out Total",
+        "value": "Network Out Total"
+      },
+      "resourceGroup": "rg-resize-20261020-101252-legacy-v2-southafricanorth",
+      "timeseries": [
+        {
+          "data": [
+            {
+              "timeStamp": "2026-10-20T10:13:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:14:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:15:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:16:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:17:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:18:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:19:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:20:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:21:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:22:00Z",
+              "total": 0.0
+            },
+            {
+              "timeStamp": "2026-10-20T10:23:00Z",
+              "total": 0.0
+            },
+            {
+              "timeStamp": "2026-10-20T10:24:00Z",
+              "total": 110304.0
+            },
+            {
+              "timeStamp": "2026-10-20T10:25:00Z",
+              "total": 0.0
+            }
+          ],
+          "metadatavalues": []
+        }
+      ],
+      "type": "Microsoft.Insights/metrics",
+      "unit": "Bytes"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+# Authentication caches and machine-specific planning state
+.azure/
+**/.azure/
+.env
+.env.*
+
+# Raw Azure responses may include account details, IPs and governance configuration.
+# Publish only deliberately curated exports under results/.
+evidence/
+
+# Keys, certificates, credentials and temporary files
+id_rsa*
+id_ed25519*
+*.pem
+*.pfx
+*.p12
+*.key
+*.stop
+*.tmp
+
+# Generated infrastructure and local editor state
+infra/*.json
+.vscode/

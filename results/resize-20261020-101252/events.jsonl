@@ -1,0 +1,11 @@
+{"utc":"2026-10-20T10:13:08.2220112+00:00","event":"azure-command","data":{"exitCode":0,"arguments":["group","create"],"elapsedMs":7751.0541}}
+{"utc":"2026-10-20T10:13:20.7862601+00:00","event":"region-attempt-failed","data":{"experiment":"legacy-v1","group":"rg-resize-20261020-101252-legacy-v1-westeurope","error":"SkuNotAvailable","region":"westeurope"}}
+{"utc":"2026-10-20T10:13:30.2434413+00:00","event":"azure-command","data":{"exitCode":0,"arguments":["group","create"],"elapsedMs":9439.8686}}
+{"utc":"2026-10-20T10:19:48.8299501+00:00","event":"azure-command","data":{"exitCode":0,"arguments":["group","create"],"elapsedMs":7849.4789}}
+{"utc":"2026-10-20T10:20:03.2339212+00:00","event":"region-attempt-failed","data":{"experiment":"legacy-v2","group":"rg-resize-20261020-101252-legacy-v2-westeurope","error":"SkuNotAvailable","region":"westeurope"}}
+{"utc":"2026-10-20T10:20:14.0143364+00:00","event":"azure-command","data":{"exitCode":0,"arguments":["group","create"],"elapsedMs":10698.1317}}
+{"utc":"2026-10-20T10:27:03.7235949+00:00","event":"cleanup-verified","data":{"group":"rg-resize-20261020-101252-legacy-v1-westeurope","exists":false}}
+{"utc":"2026-10-20T10:30:33.3634820+00:00","event":"cleanup-verified","data":{"group":"rg-resize-20261020-101252-legacy-v1-southafricanorth","exists":false}}
+{"utc":"2026-10-20T10:31:16.6082452+00:00","event":"cleanup-verified","data":{"group":"rg-resize-20261020-101252-legacy-v2-westeurope","exists":false}}
+{"utc":"2026-10-20T10:33:39.9547263+00:00","event":"cleanup-verified","data":{"group":"rg-resize-20261020-101252-legacy-v2-southafricanorth","exists":false}}
+{"utc":"2026-10-20T10:33:39.9968980+00:00","event":"run-finished","data":{"experiments":2,"cleanupFailed":false}}

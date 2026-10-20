@@ -1,0 +1,60 @@
+#cloud-config
+package_update: true
+packages:
+  - nginx
+write_files:
+  - path: /etc/nginx/sites-available/default
+    permissions: '0644'
+    content: |
+      server {
+        listen 8080 default_server;
+        server_name _;
+        root /var/lib/lab-app/www;
+        location = /health {
+          default_type application/json;
+          add_header Cache-Control "no-store";
+          try_files /health.json =503;
+        }
+        location / {
+          try_files /index.html =404;
+        }
+      }
+  - path: /usr/local/sbin/lab-app-metadata
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+      install -d -m 0755 /var/lib/lab-app/www
+      if [ ! -f /var/lib/lab-app/application-id ]; then
+        cat /proc/sys/kernel/random/uuid > /var/lib/lab-app/application-id
+        printf 'Persistent laboratory payload\n' > /var/lib/lab-app/payload.txt
+        echo 0 > /var/lib/lab-app/boot-count
+      fi
+      count=$(cat /var/lib/lab-app/boot-count)
+      count=$((count + 1))
+      echo "$count" > /var/lib/lab-app/boot-count
+      app=$(cat /var/lib/lab-app/application-id)
+      boot=$(cat /proc/sys/kernel/random/boot_id)
+      machine=$(cat /etc/machine-id)
+      hash=$(sha256sum /var/lib/lab-app/payload.txt | cut -d ' ' -f 1)
+      printf '{"status":"ok","applicationId":"%s","bootId":"%s","machineId":"%s","bootCount":%s,"payloadSha256":"%s","bootMetadataUtc":"%s"}\n' "$app" "$boot" "$machine" "$count" "$hash" "$(date -u +%FT%TZ)" > /var/lib/lab-app/www/health.json
+      printf '<h1>Azure VM resize laboratory</h1><p>Application: %s</p><p>Boot: %s</p>\n' "$app" "$boot" > /var/lib/lab-app/www/index.html
+  - path: /etc/systemd/system/lab-app-metadata.service
+    permissions: '0644'
+    content: |
+      [Unit]
+      Description=Generate persistent laboratory application health
+      Before=nginx.service
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/sbin/lab-app-metadata
+      RemainAfterExit=yes
+      [Install]
+      WantedBy=multi-user.target
+runcmd:
+  - systemctl stop nginx
+  - systemctl daemon-reload
+  - systemctl enable lab-app-metadata
+  - systemctl start lab-app-metadata
+  - nginx -t
+  - systemctl restart nginx

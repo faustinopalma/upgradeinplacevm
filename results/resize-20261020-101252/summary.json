@@ -1,0 +1,118 @@
+{
+  "analysisVersion": 1,
+  "experiments": [
+    {
+      "experiment": "legacy-v1",
+      "region": "southafricanorth",
+      "source": "Standard_D1",
+      "target": "Standard_D2ds_v5",
+      "targetInOriginalCluster": true,
+      "samples": 189,
+      "failures": 48,
+      "sampleSuccessPercent": 74.603,
+      "monitorStartUtc": "2026-10-20T10:15:55.1518619+00:00",
+      "monitorEndUtc": "2026-10-20T10:19:03.2654077+00:00",
+      "monitorDurationSeconds": 188.1135458,
+      "controlPlaneSeconds": 40.9465729,
+      "firstFailureDelaySeconds": 8.8162728,
+      "observedDowntimeSeconds": 47.9865616,
+      "maximumSampleGapMs": 1039.7966,
+      "maxScheduleLagMs": 70.0,
+      "baselineCount": 65,
+      "baselineLatencyP50Ms": 176.906,
+      "baselineLatencyP95Ms": 225.27,
+      "baselineLatencyP99Ms": 441.663,
+      "postControlPlaneCount": 68,
+      "postLatencyP50Ms": 181.175,
+      "postLatencyP95Ms": 200.23,
+      "postLatencyP99Ms": 369.422,
+      "operations": [
+        {
+          "name": "resize",
+          "elapsedMs": 40902.1905,
+          "exitCode": 0
+        }
+      ],
+      "windows": [
+        {
+          "firstFailedProbeUtc": "2026-10-20T10:17:08.0989083+00:00",
+          "lastFailedProbeUtc": "2026-10-20T10:17:55.0862910+00:00",
+          "firstRecoveredProbeUtc": "2026-10-20T10:17:56.0854699+00:00",
+          "lastSuccessfulProbeBeforeUtc": "2026-10-20T10:17:07.0871560+00:00",
+          "failedProbes": 48,
+          "observedFailureToRecoverySeconds": 47.9865616,
+          "lastGoodToFirstGoodSeconds": 48.9983139
+        }
+      ],
+      "identitiesAndPayloadPreserved": true,
+      "beforeBootCount": 1,
+      "afterBootCount": 2
+    },
+    {
+      "experiment": "legacy-v2",
+      "region": "southafricanorth",
+      "source": "Standard_D2_v2",
+      "target": "Standard_D2ds_v5",
+      "targetInOriginalCluster": true,
+      "samples": 172,
+      "failures": 31,
+      "sampleSuccessPercent": 81.977,
+      "monitorStartUtc": "2026-10-20T10:22:44.2988792+00:00",
+      "monitorEndUtc": "2026-10-20T10:25:35.3865889+00:00",
+      "monitorDurationSeconds": 171.0877097,
+      "controlPlaneSeconds": 38.1888644,
+      "firstFailureDelaySeconds": 6.589926,
+      "observedDowntimeSeconds": 30.9937882,
+      "maximumSampleGapMs": 1024.4531,
+      "maxScheduleLagMs": 102.0,
+      "baselineCount": 65,
+      "baselineLatencyP50Ms": 174.786,
+      "baselineLatencyP95Ms": 196.875,
+      "baselineLatencyP99Ms": 450.232,
+      "postControlPlaneCount": 69,
+      "postLatencyP50Ms": 175.398,
+      "postLatencyP95Ms": 185.154,
+      "postLatencyP99Ms": 197.34,
+      "operations": [
+        {
+          "name": "resize",
+          "elapsedMs": 38149.5065,
+          "exitCode": 0
+        }
+      ],
+      "windows": [
+        {
+          "firstFailedProbeUtc": "2026-10-20T10:23:55.2139431+00:00",
+          "lastFailedProbeUtc": "2026-10-20T10:24:25.2099802+00:00",
+          "firstRecoveredProbeUtc": "2026-10-20T10:24:26.2077313+00:00",
+          "lastSuccessfulProbeBeforeUtc": "2026-10-20T10:23:54.2087558+00:00",
+          "failedProbes": 31,
+          "observedFailureToRecoverySeconds": 30.9937882,
+          "lastGoodToFirstGoodSeconds": 31.9989755
+        }
+      ],
+      "identitiesAndPayloadPreserved": true,
+      "beforeBootCount": 1,
+      "afterBootCount": 2
+    }
+  ],
+  "cleanup": {
+    "createdGroups": 4,
+    "deletedAndVerifiedGroups": 4
+  },
+  "regionFailures": [
+    {
+      "experiment": "legacy-v1",
+      "group": "rg-resize-20261020-101252-legacy-v1-westeurope",
+      "error": "SkuNotAvailable",
+      "region": "westeurope"
+    },
+    {
+      "experiment": "legacy-v2",
+      "group": "rg-resize-20261020-101252-legacy-v2-westeurope",
+      "error": "SkuNotAvailable",
+      "region": "westeurope"
+    }
+  ],
+  "exemptions": []
+}

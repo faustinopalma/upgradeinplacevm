@@ -1,0 +1,52 @@
+{
+  "cost": 15,
+  "interval": "PT1M",
+  "namespace": "Microsoft.Compute/virtualMachines",
+  "resourceregion": "southafricanorth",
+  "timespan": "2026-10-20T10:13:00Z/2026-10-20T10:19:42Z",
+  "value": [
+    {
+      "displayDescription": "The percentage of allocated compute units that are currently in use by the Virtual Machine(s)",
+      "errorCode": "Success",
+      "id": "/subscriptions/identity-001/resourceGroups/rg-resize-20261020-101252-legacy-v1-southafricanorth/providers/Microsoft.Compute/virtualMachines/legacy-v1/providers/Microsoft.Insights/metrics/Percentage CPU",
+      "name": {
+        "localizedValue": "Percentage CPU",
+        "value": "Percentage CPU"
+      },
+      "resourceGroup": "rg-resize-20261020-101252-legacy-v1-southafricanorth",
+      "timeseries": [
+        {
+          "data": [
+            {
+              "timeStamp": "2026-10-20T10:13:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:14:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:15:00Z"
+            },
+            {
+              "timeStamp": "2026-10-20T10:16:00Z"
+            },
+            {
+              "average": 46.535,
+              "maximum": 66.02,
+              "minimum": 27.05,
+              "timeStamp": "2026-10-20T10:17:00Z"
+            },
+            {
+              "average": 0.335,
+              "maximum": 0.44,
+              "minimum": 0.23,
+              "timeStamp": "2026-10-20T10:18:00Z"
+            }
+          ],
+          "metadatavalues": []
+        }
+      ],
+      "type": "Microsoft.Insights/metrics",
+      "unit": "Percent"
+    }
+  ]
+}

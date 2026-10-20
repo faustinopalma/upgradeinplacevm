@@ -1,0 +1,1 @@
+PASS: two experiments, 10 s outage, 11 s last-good/first-good bracket, 10/100 failures, percentiles, subsecond timestamp precision and cleanup accounting.

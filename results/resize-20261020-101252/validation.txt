@@ -1,0 +1,5 @@
+PASS: main.bicep compiles
+PASS: exemption.bicep compiles
+PASS: success, invalid health, HTTP 503, timeout, timestamps, JSONL persistence and graceful stop (19 samples).
+PASS: two experiments, 10 s outage, 11 s last-good/first-good bracket, 10/100 failures, percentiles and cleanup accounting.
+PASS: all PowerShell scripts parse

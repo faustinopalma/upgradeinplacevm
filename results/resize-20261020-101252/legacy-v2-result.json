@@ -1,0 +1,55 @@
+{
+  "experiment": "legacy-v2",
+  "region": "southafricanorth",
+  "group": "rg-resize-20261020-101252-legacy-v2-southafricanorth",
+  "source": "Standard_D2_v2",
+  "target": "Standard_D2ds_v5",
+  "targetInOriginalCluster": true,
+  "beforeIdentity": {
+    "resourceId": "/subscriptions/identity-001/resourceGroups/rg-resize-20261020-101252-legacy-v2-southafricanorth/providers/Microsoft.Compute/virtualMachines/legacy-v2",
+    "vmId": "identity-007",
+    "size": "Standard_D2_v2",
+    "osDiskId": "/subscriptions/identity-001/resourceGroups/rg-resize-20261020-101252-legacy-v2-southafricanorth/providers/Microsoft.Compute/disks/legacy-v2-os",
+    "nicId": "/subscriptions/identity-001/resourceGroups/rg-resize-20261020-101252-legacy-v2-southafricanorth/providers/Microsoft.Network/networkInterfaces/legacy-v2-nic",
+    "publicIp": "192.0.2.2",
+    "hyperVGeneration": "22_04-lts"
+  },
+  "afterIdentity": {
+    "resourceId": "/subscriptions/identity-001/resourceGroups/rg-resize-20261020-101252-legacy-v2-southafricanorth/providers/Microsoft.Compute/virtualMachines/legacy-v2",
+    "vmId": "identity-007",
+    "size": "Standard_D2ds_v5",
+    "osDiskId": "/subscriptions/identity-001/resourceGroups/rg-resize-20261020-101252-legacy-v2-southafricanorth/providers/Microsoft.Compute/disks/legacy-v2-os",
+    "nicId": "/subscriptions/identity-001/resourceGroups/rg-resize-20261020-101252-legacy-v2-southafricanorth/providers/Microsoft.Network/networkInterfaces/legacy-v2-nic",
+    "publicIp": "192.0.2.2",
+    "hyperVGeneration": "22_04-lts"
+  },
+  "beforeHealth": {
+    "status": "ok",
+    "applicationId": "identity-008",
+    "bootId": "identity-009",
+    "machineId": "identity-010",
+    "bootCount": 1,
+    "payloadSha256": "0cc00adad7f1badec3e7125d22b1f4d6e32677a0e48a8de434fda37fede1a2b0",
+    "bootMetadataUtc": "2026-10-20T10:22:29Z"
+  },
+  "afterHealth": {
+    "status": "ok",
+    "applicationId": "identity-008",
+    "bootId": "identity-011",
+    "machineId": "identity-010",
+    "bootCount": 2,
+    "payloadSha256": "0cc00adad7f1badec3e7125d22b1f4d6e32677a0e48a8de434fda37fede1a2b0",
+    "bootMetadataUtc": "2026-10-20T10:24:25Z"
+  },
+  "resizeStartUtc": "2026-10-20T10:23:48.6240171+00:00",
+  "controlPlaneEndUtc": "2026-10-20T10:24:26.8128815+00:00",
+  "firstPostCommandHealthUtc": "2026-10-20T10:24:27.1860248+00:00",
+  "operations": [
+    {
+      "name": "resize",
+      "elapsedMs": 38149.5065,
+      "exitCode": 0
+    }
+  ],
+  "probesFile": "legacy-v2-probes.jsonl"
+}
