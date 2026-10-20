@@ -17,14 +17,18 @@ All six resource groups created across the preliminary and measured runs were de
 
 **Read the [experiment report](REPORT.md)** for feasibility, application/storage continuity, observed downtime, and the procedure.
 
+For the allocation-failure risk after deallocation, see the [capacity-reserved resize methodology and executable lab](CAPACITY-RESERVATION.md). It reserves target capacity before stopping the sources and releases the temporary reservation after validation.
+
 ## Repository layout
 
 | Path | Purpose |
 |---|---|
 | [REPORT.md](REPORT.md) | Detailed experiment and operational guidance |
+| [CAPACITY-RESERVATION.md](CAPACITY-RESERVATION.md) | Capacity gate, reserved resize, immediate release, and recovery limitations |
 | [infra/main.bicep](infra/main.bicep) | VM, disk, network, static public IP, and monitor-restricted NSG |
 | [infra/cloud-init.yaml](infra/cloud-init.yaml) | nginx application, persistent payload, and per-boot health metadata |
 | [scripts/Invoke-Lab.ps1](scripts/Invoke-Lab.ps1) | Deployment, regional retries, monitoring, resize, verification, and cleanup |
+| [scripts/Invoke-ReservedResizeLab.ps1](scripts/Invoke-ReservedResizeLab.ps1) | Reserved resize and target-only allocation tests |
 | [scripts/Monitor-Http.ps1](scripts/Monitor-Http.ps1) | One HTTP probe per second, with JSONL evidence |
 | [scripts/Analyze-Results.ps1](scripts/Analyze-Results.ps1) | Downtime windows, latency percentiles, and cleanup accounting |
 | [scripts/Collect-LabMetrics.ps1](scripts/Collect-LabMetrics.ps1) | Optional CPU and I/O collection from Azure Monitor |
@@ -47,6 +51,8 @@ $env:AZURE_CONFIG_DIR = 'C:\.AutenticazioneCLI\<environment>\.azure'
 az bicep build --file .\infra\main.bicep --stdout | Out-Null
 .\tests\Test-Monitor.ps1
 .\tests\Test-Analysis.ps1
+.\tests\Test-CapacityReservation.ps1
+.\tests\Test-LabCommon.ps1
 ```
 
 Recompute the published measurements without Azure access:

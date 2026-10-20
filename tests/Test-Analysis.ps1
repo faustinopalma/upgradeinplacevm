@@ -40,7 +40,19 @@ try {
         if ($result.baselineLatencyP95Ms -ne 10 -or $result.postLatencyP95Ms -ne 10) { throw 'Latency percentile failed.' }
         if ($result.firstFailureDelaySeconds -ne 4.5 -or $result.controlPlaneSeconds -ne 19.5) { throw 'Subsecond timestamp precision was lost.' }
     }
-    Write-Output 'PASS: two experiments, 10 s outage, 11 s last-good/first-good bracket, 10/100 failures, percentiles, subsecond timestamp precision and cleanup accounting.'
+    $failed = $false
+    try {
+        & (Join-Path $root 'scripts\Analyze-Results.ps1') -EvidencePath $directory -ExpectedExperiments 1 | Out-Null
+    } catch {
+        if ($_.Exception.Message -notmatch 'Expected 1 completed experiments') { throw }
+        $failed = $true
+    }
+    if (!$failed) { throw 'Unexpected experiment count was accepted.' }
+    Remove-Item -LiteralPath (Join-Path $directory 'legacy-v2-result.json')
+    & (Join-Path $root 'scripts\Analyze-Results.ps1') -EvidencePath $directory -ExpectedExperiments 1 | Out-Null
+    $single = Get-Content -LiteralPath (Join-Path $directory 'summary.json') -Raw | ConvertFrom-Json
+    if ($single.experiments.Count -ne 1 -or $single.experiments[0].samples -ne 100) { throw 'Explicit single-experiment analysis failed.' }
+    Write-Output 'PASS: default two-experiment and explicit single-experiment analysis, count mismatch rejection, 10 s outage, 11 s last-good/first-good bracket, 10/100 failures, percentiles, subsecond precision and cleanup accounting.'
 } finally {
     Get-ChildItem -LiteralPath $directory -File | ForEach-Object { Remove-Item -LiteralPath $_.FullName }
     Remove-Item -LiteralPath $directory

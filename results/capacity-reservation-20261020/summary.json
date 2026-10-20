@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "dateUtc": "2026-10-20",
+  "dataType": "Curated measurements from two real Azure experiments.",
+  "reservationType": "on-demand",
+  "targetVmSize": "Standard_D2ds_v5",
+  "reservedQuantityPerTest": 2,
+  "explicitAvailabilityZone": null,
+  "holdingIntervalDefinition": "Successful capacity verification to quantity-zero verification; not an invoiced duration.",
+  "fullResize": {
+    "region": "southafricanorth",
+    "sourceVmSize": "Standard_D2_v2",
+    "runtimeAllocatedVmCounts": [1, 2],
+    "identitiesAndPayloadPreserved": true,
+    "experiments": [
+      {
+        "name": "vm-1",
+        "controlPlaneSeconds": 102.2296633,
+        "observedHttpDowntimeSeconds": 102.0096816,
+        "samples": 546,
+        "failedProbes": 102,
+        "beforeBootCount": 1,
+        "afterBootCount": 2,
+        "releaseWindowSamples": 133,
+        "releaseWindowFailedProbes": 0
+      },
+      {
+        "name": "vm-2",
+        "controlPlaneSeconds": 117.5524627,
+        "observedHttpDowntimeSeconds": 116.9906194,
+        "samples": 547,
+        "failedProbes": 117,
+        "beforeBootCount": 1,
+        "afterBootCount": 2,
+        "releaseWindowSamples": 134,
+        "releaseWindowFailedProbes": 0
+      }
+    ],
+    "verifiedReservedSeconds": 431.9464729,
+    "reservationReleasedAndDeleted": true,
+    "guestRebootDuringRelease": false
+  },
+  "westEuropeTargetAllocation": {
+    "region": "westeurope",
+    "reservedBeforeVmCreation": true,
+    "runtimeAllocatedVmCounts": [1, 2],
+    "healthyTargetVms": 2,
+    "legacyResizeTested": false,
+    "experiments": [
+      {
+        "name": "vm-1",
+        "samples": 237,
+        "failedProbes": 0,
+        "releaseWindowSamples": 117,
+        "releaseWindowFailedProbes": 0
+      },
+      {
+        "name": "vm-2",
+        "samples": 238,
+        "failedProbes": 0,
+        "releaseWindowSamples": 118,
+        "releaseWindowFailedProbes": 0
+      }
+    ],
+    "verifiedReservedSeconds": 373.7422079,
+    "reservationReleasedAndDeleted": true,
+    "guestRebootDuringRelease": false
+  },
+  "westEuropeLegacyCreation": {
+    "outcome": "SkuNotAvailable",
+    "action": "Deleted failed-attempt resources before the full test in South Africa North."
+  },
+  "cleanup": {
+    "createdResourceGroups": 3,
+    "deletedAndIndependentlyVerifiedGroups": 3,
+    "remainingTaggedResources": 0,
+    "lastVerificationUtc": "2026-10-20T15:23:06.7437746+00:00"
+  }
+}

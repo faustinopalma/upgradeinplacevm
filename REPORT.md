@@ -138,6 +138,8 @@ The test supports using a compatible resize to preserve an installed application
 
 For production, validate backups and recovery, storage/controller compatibility, dependencies, and application-specific consistency. Plan a maintenance window; resizing back is not a guaranteed rollback because legacy capacity may be unavailable. If the VM is retained, update the desired `vmSize` in its IaC to avoid a later deployment reversing the change.
 
+To mitigate target allocation failure, [reserve capacity before stopping the source](CAPACITY-RESERVATION.md). The companion lab exercises that workflow separately; the original measurements above used direct resize without a capacity reservation.
+
 Avoiding user-visible downtime requires additional instances and controlled traffic switching, not just a different resize command. This experiment deliberately measures the interruption of a single instance.
 
 ## Evidence and cleanup

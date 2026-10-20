@@ -1,4 +1,7 @@
-param([Parameter(Mandatory)][string]$EvidencePath)
+param(
+    [Parameter(Mandatory)][string]$EvidencePath,
+    [ValidateRange(1, 10)][int]$ExpectedExperiments = 2
+)
 $ErrorActionPreference = 'Stop'
 
 function Get-UtcTimestamp($Value) {
@@ -91,7 +94,7 @@ $summaries = foreach ($file in Get-ChildItem -LiteralPath $EvidencePath -Filter 
         afterBootCount = $result.afterHealth.bootCount
     }
 }
-if (@($summaries).Count -ne 2) { throw 'Expected two completed experiments.' }
+if (@($summaries).Count -ne $ExpectedExperiments) { throw "Expected $ExpectedExperiments completed experiments." }
 $events = @(Get-Content -LiteralPath (Join-Path $EvidencePath 'events.jsonl') | ForEach-Object { $_ | ConvertFrom-Json -Depth 100 })
 $created = @($events | Where-Object { $_.event -eq 'azure-command' -and $_.data.arguments[0] -eq 'group' -and $_.data.arguments[1] -eq 'create' -and $_.data.exitCode -eq 0 })
 $cleaned = @($events | Where-Object event -eq 'cleanup-verified')

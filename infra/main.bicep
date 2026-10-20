@@ -10,6 +10,7 @@ param imageVersion string = 'latest'
 param adminUsername string = 'labadmin'
 param customData string = loadTextContent('cloud-init.yaml')
 param labId string
+param capacityReservationGroupId string = ''
 
 var tags = {
   purpose: 'temporary-vm-resize-laboratory'
@@ -93,6 +94,9 @@ resource vm 'Microsoft.Compute/virtualMachines@2025-04-01' = {
   tags: tags
   properties: {
     hardwareProfile: { vmSize: vmSize }
+    capacityReservation: empty(capacityReservationGroupId) ? null : {
+      capacityReservationGroup: { id: capacityReservationGroupId }
+    }
     storageProfile: {
       imageReference: {
         publisher: 'Canonical'
